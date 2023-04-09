@@ -1,3 +1,3 @@
-module github.com/Aldric2023/SystemsProgrammingTest
+module github.com/Aldric2023/webapplication
 
 go 1.20

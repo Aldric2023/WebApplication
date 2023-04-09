@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/Aldric2023/SystemsProgrammingTest/public/QuoteAPI/gohttp"
+	"github.com/Aldric2023/webapplication/public/QuoteAPI/gohttp"
 )
 
 type application struct {

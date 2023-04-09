@@ -9,7 +9,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Aldric2023/SystemsProgrammingTest/public/QuoteAPI"
+	"github.com/Aldric2023/webapplication/public/QuoteAPI"
 )
 
 type UserData struct {
