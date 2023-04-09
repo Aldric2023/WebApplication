@@ -15,7 +15,10 @@ import (
 type UserData struct {
 	PageTitle string
 	Body      template.HTML
+	IP string
 }
+
+
 
 func middleware(next http.Handler) http.Handler {
 
@@ -46,8 +49,10 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	data := UserData{
 		PageTitle: "About Me",
 		Body:      template.HTML(body),
+		IP: r.Host,
 	}
 
+	log.Println("Url user used: "+ data.IP)
 	ts, _ := template.ParseFiles("public/index.html.tmpl")
 
 	ts.Execute(w, data)
@@ -77,6 +82,7 @@ func randomHandler(w http.ResponseWriter, r *http.Request) {
 	data := UserData{
 		PageTitle: "Here is a random quote",
 		Body:      template.HTML(body),
+		IP: r.Host,
 	}
 
 	ts, _ := template.ParseFiles("public/index.html.tmpl")
@@ -105,15 +111,20 @@ func greetingHandler(w http.ResponseWriter, r *http.Request) {
 		greetingData["year"] + " and the time is now " + greetingData["hour"] + ":" + greetingData["minute"] +
 		":" + greetingData["second"] + "</p></h2>"
 
+	
 	// Pass the greeting message to the HTML template
 	data := UserData{
 		PageTitle: "We sometimes get lost during the Week.\n Here is a reminder",
 		Body:      template.HTML(body),
+		IP: r.Host,
 	}
 
 	ts, _ := template.ParseFiles("public/index.html.tmpl")
 	ts.Execute(w, data)
 }
+
+
+
 
 func main() {
 	// serve static files from the "static" directory
@@ -123,12 +134,11 @@ func main() {
 
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	//wor
+	//work
 	mux.Handle("/", middleware(http.HandlerFunc(homeHandler)))
 	mux.Handle("/random", middleware(http.HandlerFunc(randomHandler)))
 	mux.Handle("/greeting", middleware(http.HandlerFunc(greetingHandler)))
 
-	log.Fatal(http.ListenAndServe("192.168.18.25:80", mux))
-
-	log.Println("we application online")
+	log.Fatal(http.ListenAndServe(":80", mux))
+	
 }
