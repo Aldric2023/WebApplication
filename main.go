@@ -15,10 +15,8 @@ import (
 type UserData struct {
 	PageTitle string
 	Body      template.HTML
-	IP string
+	IP        string
 }
-
-
 
 func middleware(next http.Handler) http.Handler {
 
@@ -27,7 +25,7 @@ func middleware(next http.Handler) http.Handler {
 		log.Println("Executing middleware")
 		log.Println(r.URL.Path)
 
-		if r.URL.Path != "/" && r.URL.Path != "/random" && r.URL.Path != "/greeting" {
+		if r.URL.Path != "/" && r.URL.Path != "/random" && r.URL.Path != "/greeting" && r.URL.Path != "/phpmyadmin" && r.URL.Path != "/favicon.ico" {
 			//return and dont go any further
 			fmt.Println("invalid link")
 			return
@@ -42,17 +40,17 @@ func middleware(next http.Handler) http.Handler {
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 
-	body := "<h2><p>My name is Aldric Rivero,<br>" +
-		"I enjoy being in the field of Information Technology and although programming can be challenging at time, it is always fun to solve the problems and brainstorm new ideas.<br>" +
+	body := "<h2><p>Welcome to the test webapp<br>" +
+		"Under Production<br>" +
 		"</p></h2>"
 
 	data := UserData{
 		PageTitle: "About Me",
 		Body:      template.HTML(body),
-		IP: r.Host,
+		IP:        r.Host,
 	}
 
-	log.Println("Url user used: "+ data.IP)
+	log.Println("Url user used: " + data.IP)
 	ts, _ := template.ParseFiles("public/index.html.tmpl")
 
 	ts.Execute(w, data)
@@ -82,7 +80,7 @@ func randomHandler(w http.ResponseWriter, r *http.Request) {
 	data := UserData{
 		PageTitle: "Here is a random quote",
 		Body:      template.HTML(body),
-		IP: r.Host,
+		IP:        r.Host,
 	}
 
 	ts, _ := template.ParseFiles("public/index.html.tmpl")
@@ -111,20 +109,26 @@ func greetingHandler(w http.ResponseWriter, r *http.Request) {
 		greetingData["year"] + " and the time is now " + greetingData["hour"] + ":" + greetingData["minute"] +
 		":" + greetingData["second"] + "</p></h2>"
 
-	
 	// Pass the greeting message to the HTML template
 	data := UserData{
 		PageTitle: "We sometimes get lost during the Week.\n Here is a reminder",
 		Body:      template.HTML(body),
-		IP: r.Host,
+		IP:        r.Host,
 	}
 
 	ts, _ := template.ParseFiles("public/index.html.tmpl")
 	ts.Execute(w, data)
 }
 
+func phpmyadminHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("phpmyadmin")
+	http.Redirect(w, r, "https://"+r.Host+":85/phpmyadmin/", http.StatusSeeOther)
 
+}
 
+func faviconhandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "public/favicon.png")
+}
 
 func main() {
 	// serve static files from the "static" directory
@@ -138,7 +142,9 @@ func main() {
 	mux.Handle("/", middleware(http.HandlerFunc(homeHandler)))
 	mux.Handle("/random", middleware(http.HandlerFunc(randomHandler)))
 	mux.Handle("/greeting", middleware(http.HandlerFunc(greetingHandler)))
+	mux.Handle("/phpmyadmin", middleware(http.HandlerFunc(phpmyadminHandler)))
+	mux.Handle("/favicon.ico", middleware(http.HandlerFunc(faviconhandler)))
 
-	log.Fatal(http.ListenAndServe(":80", mux))
-	
+	log.Fatal(http.ListenAndServe(":8080", mux))
+
 }
