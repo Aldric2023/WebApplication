@@ -3,6 +3,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -11,7 +12,26 @@ import (
 	"strings"
 
 	"github.com/Aldric2023/webapplication/public/QuoteAPI"
+	_ "github.com/go-sql-driver/mysql"
 )
+
+type Database struct {
+	db *sql.DB
+}
+
+func connectDatabase() (*sql.DB, error) {
+	db, err := sql.Open("mysql", "root:114711z82007@tcp(localhost:3306)/applicationDB")
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
 
 type UserData struct {
 	PageTitle string
@@ -24,7 +44,7 @@ func middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//this is executed on the way down to the handeler
 		log.Println("Executing middleware")
-		log.Println(r.URL.Path)
+		
 
 		if r.URL.Path != "/" && r.URL.Path != "/random" && r.URL.Path != "/greeting" && r.URL.Path != "/phpmyadmin" && r.URL.Path != "/favicon.ico" {
 			//return and dont go any further
@@ -35,7 +55,32 @@ func middleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 		//this is executed on the way up
 		log.Println("Executing middlewareB again")
+		//log their IP Address and store it on the database
 		log.Printf("IP address: %s ", r.RemoteAddr)
+		log.Println(r.URL.Path)
+
+		//open connection to database
+		db, err := connectDatabase()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer db.Close()
+
+		stmt, err := db.Prepare("INSERT INTO IPAddresses (IP, URL) VALUES (? , ?)")
+		if err != nil {
+			panic(err)
+		}
+		defer stmt.Close()
+	
+		// Insert the IP and link into the database
+		ip := r.RemoteAddr
+		link := r.URL.Path
+
+		_, err = stmt.Exec(ip, link)
+		if err != nil {
+			panic(err)
+		}
+
 	})
 }
 
@@ -134,6 +179,7 @@ func faviconhandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
 	// serve static files from the "static" directory
 	mux := http.NewServeMux()
 
@@ -147,6 +193,31 @@ func main() {
 	mux.Handle("/greeting", middleware(http.HandlerFunc(greetingHandler)))
 	mux.Handle("/phpmyadmin", middleware(http.HandlerFunc(phpmyadminHandler)))
 	mux.Handle("/favicon.ico", middleware(http.HandlerFunc(faviconhandler)))
+
+	db, err := connectDatabase()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query("SELECT * FROM IPAddresses")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int
+		var IPAddresses string
+		var URL string
+
+		err = rows.Scan(&id, &IPAddresses, &URL)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(id, IPAddresses, URL)
+	}
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 
