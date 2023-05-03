@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/Aldric2023/webapplication/public/QuoteAPI"
 )
@@ -122,11 +123,13 @@ func greetingHandler(w http.ResponseWriter, r *http.Request) {
 
 func phpmyadminHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("phpmyadmin")
-	http.Redirect(w, r, "https://"+r.Host+":85/phpmyadmin/", http.StatusSeeOther)
+	// fmt.Println("Host for phpmyadmin function: " + strings.Split(r.Host, ":")[0])
+	http.Redirect(w, r, "http://"+strings.Split(r.Host, ":")[0]+":80/phpmyadmin/", http.StatusSeeOther)
 
 }
 
 func faviconhandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("favicon is being requested")
 	http.ServeFile(w, r, "public/favicon.png")
 }
 
